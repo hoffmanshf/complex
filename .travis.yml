@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t hoffmanshf/complex -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true hoffmanshf/complex npm run test
+
+after_success:
+  - docker build -t hoffmanshf/multi-client ./client
+  - docker build -t hoffmanshf/multi-nginx ./nginx
+  - docker build -t hoffmanshf/multi-server ./server
+  - docker build -t hoffmanshf/multi-worker ./worker
+  # login to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to docker hub
+  - docker push hoffmanshf/multi-client
+  - docker push hoffmanshf/multi-nginx
+  - docker push hoffmanshf/multi-server
+  - docker push hoffmanshf/multi-worker
